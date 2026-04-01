@@ -103,14 +103,32 @@ def parse_lab_files(file_bytes_list: list[tuple[str, bytes]]) -> list[dict]:
             unit = str(row.iloc[11]).strip() if pd.notna(row.iloc[11]) else ""
             result_raw = row.iloc[12]
 
-            if is_header == "Y" or not detail_item:
+            if is_header == "Y":
                 continue
 
             category = LAB_CATEGORY_MAP.get(category_raw, "unknown")
-            item_name = detail_item
+
+            # 일반성분이 검사항목으로 직접 나오는 경우 (상세검사항목이 비어 있음)
+            # 예: 검사항목="TN (총질소)_DUMAS법", 상세검사항목=""
+            if category == "general" and not detail_item:
+                std = SUMMARY_TEST_MAP.get(category_raw)
+                if std:
+                    item_name = std
+                else:
+                    continue
+            elif not detail_item:
+                continue
+            else:
+                item_name = detail_item
+
+            # 아미노산 항목명에서 (총)/(유리) 접미사 제거
+            # 예: "Aspartic acid (총)" → "Aspartic acid"
+            if category in ("taa", "faa"):
+                item_name = re.sub(r"\s*\(총\)\s*$", "", item_name)
+                item_name = re.sub(r"\s*\(유리\)\s*$", "", item_name)
 
             if category == "vitB":
-                item_name = VITB_NAME_MAP.get(detail_item, detail_item)
+                item_name = VITB_NAME_MAP.get(detail_item, item_name)
                 if item_name == detail_item:
                     m = re.match(r"Vitamin B(\d+)", detail_item)
                     if m:
@@ -124,6 +142,7 @@ def parse_lab_files(file_bytes_list: list[tuple[str, bytes]]) -> list[dict]:
                 "result": parse_result(result_raw),
             })
     return records
+
 
 
 def parse_summary_files(file_bytes_list: list[tuple[str, bytes]]) -> list[dict]:

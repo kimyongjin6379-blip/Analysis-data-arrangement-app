@@ -53,21 +53,41 @@ SENSANG_ITEMS = ["pH", "탁도", "색도 (L)", "색도 (a)", "색도 (b)"]
 LAB_CATEGORY_MAP = {
     "Vitamin B": "vitB",
     "유기산 (Organic acid)": "organic_acid",
+    # 아미노산 — 다양한 명칭 변형 대응
     "유리아미노산": "faa",
     "유리아미노산 (Free amino acid)": "faa",
+    "아미노산 (유리)": "faa",
     "총아미노산": "taa",
     "총아미노산 (Total amino acid)": "taa",
+    "아미노산 (총)": "taa",
+    # 미네랄
     "미네랄": "mineral",
     "미네랄 (Mineral)": "mineral",
+    "미네랄 (IC)": "mineral",
+    # 유리당
     "유리당": "free_sugar",
     "유리당 (Free sugar)": "free_sugar",
+    "유리당 (Free sugars)": "free_sugar",
+    # 핵산
     "핵산": "nucleic_acid",
     "핵산 (Nucleic acid)": "nucleic_acid",
+    # 일반성분 (카테고리로 묶여 있을 때)
     "일반성분": "general",
     "일반 성분": "general",
+    # 일반성분 (개별 항목이 검사항목으로 직접 나올 때)
+    "TN (총질소)_DUMAS법": "general",
+    "TN (총질소)": "general",
+    "AN (아미노태 질소)": "general",
+    "총당 (Total sugar)": "general",
+    "환원당 (DNS법)": "general",
+    "NaCl (식염)": "general",
+    "수분 (Moisture)": "general",
+    "회분 (Ash)": "general",
+    "조지방 (Crude Fat)": "general",
 }
 
 # 엑셀정리파일 검사항목명 → 표준 성분명 매핑
+# (의뢰품검사상세에서 개별 일반성분 항목이 검사항목으로 나올 때도 재사용)
 SUMMARY_TEST_MAP = {
     "TN (총질소)_DUMAS법": "TN",
     "TN (총질소)": "TN",
