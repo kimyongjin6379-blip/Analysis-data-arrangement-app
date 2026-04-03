@@ -18,7 +18,9 @@ from constants import (
     FREE_SUGARS,
     GENERAL_COMPONENTS,
     LAB_CATEGORY_MAP,
+    MINERAL_NAME_MAP,
     MINERALS,
+    NUCLEIC_ACID_NAME_MAP,
     NUCLEIC_ACIDS,
     SENSANG_ITEMS,
     SUMMARY_TEST_MAP,
@@ -36,6 +38,7 @@ FONT_DATA = Font(name="맑은 고딕", size=9)
 FONT_NOTE = Font(name="맑은 고딕", size=8, italic=True)
 ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
 ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
+ALIGN_LEFT_NOWRAP = Alignment(horizontal="left", vertical="center", wrap_text=False)
 THIN_BORDER = Border(
     left=Side(style="thin"),
     right=Side(style="thin"),
@@ -133,6 +136,12 @@ def parse_lab_files(file_bytes_list: list[tuple[str, bytes]]) -> list[dict]:
                     m = re.match(r"Vitamin B(\d+)", detail_item)
                     if m:
                         item_name = f"B{m.group(1)}"
+
+            if category == "mineral":
+                item_name = MINERAL_NAME_MAP.get(item_name, item_name)
+
+            if category == "nucleic_acid":
+                item_name = NUCLEIC_ACID_NAME_MAP.get(item_name, item_name)
 
             records.append({
                 "sample_name": sample_name,
@@ -295,33 +304,36 @@ def generate_excel(
     samples = [sc["display_name"] for sc in sample_config]
     n = len(samples)
 
-    _build_summary_sheet(wb, samples, sample_data, sensang_data, n)
+    _build_summary_sheet(wb, samples, sample_data, sensang_data, n, batch_date)
 
     for sc in sample_config:
         name = sc["display_name"]
         sheet_name = sc.get("sheet_name", name)
         raw_name = sc.get("raw_material_name", "")
-        _build_sample_sheet(wb, sheet_name, name, raw_name, sample_data, sensang_data)
+        _build_sample_sheet(wb, sheet_name, name, raw_name, sample_data, sensang_data, batch_date)
 
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
 
 
-def _build_summary_sheet(wb, samples, sample_data, sensang_data, n):
+def _build_summary_sheet(wb, samples, sample_data, sensang_data, n, batch_date=""):
     ws = wb.active
     ws.title = "성상, 성분"
 
     # 컬럼 너비
     ws.column_dimensions["A"].width = 11
-    ws.column_dimensions["B"].width = 14
+    ws.column_dimensions["B"].width = 18
     for i in range(n):
         ws.column_dimensions[get_column_letter(3 + i)].width = 12
     gap1 = 3 + n
     ws.column_dimensions[get_column_letter(gap1)].width = 2
 
-    # === Row 1: 제목 ===
-    _set_cell(ws, 1, 1, "바이오펩톤 성상 및 성분 분석", FONT_TITLE, ALIGN_LEFT)
+    # === Row 1: 제목 === (분석항목 성분 분석 + 날짜)
+    date_str = f" ({batch_date})" if batch_date else ""
+    sample_names_str = ", ".join(samples) if len(samples) <= 3 else f"{samples[0]} 외 {len(samples)-1}종"
+    title = f"{sample_names_str} 성분 분석{date_str}"
+    _set_cell(ws, 1, 1, title, FONT_TITLE, ALIGN_LEFT)
     ws.row_dimensions[1].height = 22
 
     # === 성상 섹션 (Row 3~10) ===
@@ -445,7 +457,7 @@ def _build_summary_sheet(wb, samples, sample_data, sensang_data, n):
     for ai, aa in enumerate(AMINO_ACIDS):
         row = data_start + ai
         for bi, (bstart, bcat) in enumerate(zip(blk_starts, blk_cats)):
-            _set_cell(ws, row, bstart, aa, FONT_DATA, ALIGN_LEFT, THIN_BORDER)
+            _set_cell(ws, row, bstart, aa, FONT_DATA, ALIGN_LEFT_NOWRAP, THIN_BORDER)
             for i, s in enumerate(samples):
                 col = bstart + 1 + i
                 if bcat == "faa":
@@ -487,20 +499,21 @@ def _build_summary_sheet(wb, samples, sample_data, sensang_data, n):
             _set_cell(ws, sum_row, col, formula, FONT_HEADER, ALIGN_CENTER, THIN_BORDER, FILL_HEADER, number_format="0.00")
 
 
-def _build_sample_sheet(wb, sheet_name, display_name, raw_name, sample_data, sensang_data):
+def _build_sample_sheet(wb, sheet_name, display_name, raw_name, sample_data, sensang_data, batch_date=""):
     ws = wb.create_sheet(title=sheet_name)
     has_raw = bool(raw_name)
     data_cols = 2 if has_raw else 1  # 원료 + BIO 또는 BIO만
 
     # 컬럼 너비
     ws.column_dimensions["A"].width = 11
-    ws.column_dimensions["B"].width = 14
+    ws.column_dimensions["B"].width = 18
     ws.column_dimensions["C"].width = 12
     if has_raw:
         ws.column_dimensions["D"].width = 12
 
     # === Row 1: 제목 ===
-    _set_cell(ws, 1, 1, f"{display_name} 성상 및 성분 분석", FONT_TITLE, ALIGN_LEFT)
+    date_str = f" ({batch_date})" if batch_date else ""
+    _set_cell(ws, 1, 1, f"{display_name} 성분 분석{date_str}", FONT_TITLE, ALIGN_LEFT)
 
     # === 성상 (Row 3~9) ===
     _set_cell(ws, 3, 1, "성상", FONT_SECTION, ALIGN_CENTER, THIN_BORDER, FILL_SECTION)
@@ -618,7 +631,7 @@ def _build_sample_sheet(wb, sheet_name, display_name, raw_name, sample_data, sen
     data_start = hdr_row2 + 1
     for ai, aa in enumerate(AMINO_ACIDS):
         row = data_start + ai
-        _set_cell(ws, row, 2, aa, FONT_DATA, ALIGN_LEFT, THIN_BORDER)
+        _set_cell(ws, row, 2, aa, FONT_DATA, ALIGN_LEFT_NOWRAP, THIN_BORDER)
         for bi, (bcol, bcat) in enumerate(zip(blk_col_starts, blk_cats)):
             if bcat == "faa":
                 val = sample_data.get(display_name, {}).get("faa", {}).get(aa, "")

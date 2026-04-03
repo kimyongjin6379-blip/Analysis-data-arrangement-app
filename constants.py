@@ -41,7 +41,7 @@ FREE_SUGARS = ["Fructose", "Glucose", "Sucrose", "Lactose", "Maltose"]
 MINERALS = ["Na", "K", "Mg", "Ca"]
 
 # 핵산 (섹션 4)
-NUCLEIC_ACIDS = ["AMP", "GMP", "UMP", "IMP", "CMP", "Hypoxantine"]
+NUCLEIC_ACIDS = ["AMP", "GMP", "UMP", "IMP", "CMP", "Hypoxanthine"]
 
 # 비타민 B (섹션 5)
 VITAMIN_B = ["B1", "B2", "B3", "B6", "B9"]
@@ -112,4 +112,40 @@ VITB_NAME_MAP = {
     "Vitamin B3(Nicotinamide)": "B3",
     "Vitamin B6(Pyridoxin hydrochloride)": "B6",
     "Vitamin B9(Folic acid)": "B9",
+}
+
+# 미네랄 상세 항목명 → 표준명 매핑
+MINERAL_NAME_MAP = {
+    "Na": "Na",
+    "Sodium": "Na",
+    "Sodium (Na)": "Na",
+    "나트륨": "Na",
+    "나트륨 (Na)": "Na",
+    "K": "K",
+    "Potassium": "K",
+    "Potassium (K)": "K",
+    "칼륨": "K",
+    "칼륨 (K)": "K",
+    "Mg": "Mg",
+    "Magnesium": "Mg",
+    "Magnesium (Mg)": "Mg",
+    "마그네슘": "Mg",
+    "마그네슘 (Mg)": "Mg",
+    "Ca": "Ca",
+    "Calcium": "Ca",
+    "Calcium (Ca)": "Ca",
+    "칼슘": "Ca",
+    "칼슘 (Ca)": "Ca",
+}
+
+# 핵산 상세 항목명 → 표준명 매핑 (오타 변형 포함)
+NUCLEIC_ACID_NAME_MAP = {
+    "AMP": "AMP",
+    "GMP": "GMP",
+    "UMP": "UMP",
+    "IMP": "IMP",
+    "CMP": "CMP",
+    "Hypoxanthine": "Hypoxanthine",
+    "Hypoxantine": "Hypoxanthine",
+    "hypoxanthine": "Hypoxanthine",
 }

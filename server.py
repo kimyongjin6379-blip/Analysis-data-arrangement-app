@@ -90,8 +90,13 @@ async def process_upload(
         raise HTTPException(status_code=500, detail=f"서버 처리 오류: {str(e)}")
 
     file_id = str(uuid.uuid4())
-    date_part = batch_date.replace("-", "")[:6] if batch_date else "unknown"
-    output_filename = f"펩리치 바이오펩톤 성분 분석-초안 ({date_part}).xlsx"
+    # 파일명: "샘플명 분석.xlsx" 형태
+    sample_names = [sc["display_name"] for sc in sample_config]
+    if len(sample_names) <= 3:
+        name_part = ", ".join(sample_names)
+    else:
+        name_part = f"{sample_names[0]} 외 {len(sample_names)-1}종"
+    output_filename = f"{name_part} 분석.xlsx"
     output_path = TEMP_DIR / f"{file_id}.xlsx"
     output_path.write_bytes(excel_bytes)
 
